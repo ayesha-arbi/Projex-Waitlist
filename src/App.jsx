@@ -240,7 +240,7 @@ const inputBase = {
 /* ─── MAIN WAITLIST PAGE ─── */
 export default function WaitlistPage() {
   const [role, setRole] = useState(null);
-  const [form, setForm] = useState({ name:"", email:"", reason:"" });
+  const [form, setForm] = useState({ name:"", email:"", company:"", reason:"" });
   const [errors, setErrors] = useState({});
   const [focusField, setFocus] = useState(null);
   const [submitted, setSubmitted] = useState(false);
@@ -258,6 +258,7 @@ export default function WaitlistPage() {
     const e = {};
     if (!role) e.role = "Required";
     if (!form.name.trim()) e.name = "Required";
+    if (role === "company" && !form.company.trim()) e.company = "Required";
     if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = "Valid email required";
     if (!form.reason.trim() || form.reason.trim().length < 20) e.reason = "Min 20 characters";
     return e;
@@ -454,6 +455,20 @@ export default function WaitlistPage() {
                     style={{ ...inputStyle("name"), color: errors.name ? "#ef4444" : C.text }}
                   />
                 </Field>
+
+                {role === "company" && (
+                  <Field label="Company Name" hint={errors.company}>
+                    <input
+                    type="text"
+                    placeholder="e.g. Systems Limited, Netsol Technologies"
+                    value={form.company}
+                    onChange={e => { setForm(f=>({...f,company:e.target.value})); setErrors(er=>({...er,company:undefined})); }}
+                    onFocus={() => setFocus("company")}
+                    onBlur={() => setFocus(null)}
+                    style={{ ...inputStyle("company"), color: errors.company ? "#ef4444" : C.text }}
+                    />
+                    </Field>
+                  )}
 
                 <Field label="Email Address" hint={errors.email}>
                   <input
