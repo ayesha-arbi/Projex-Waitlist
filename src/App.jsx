@@ -333,7 +333,7 @@ export default function WaitlistPage() {
               display:"flex", gap:10, flexWrap:"wrap", marginBottom:32,
               animation:"fadeUp 0.55s 0.21s ease both",
             }}>
-              <StatPill icon={<GraduationCap size={16} strokeWidth={2.5}/>} label="NED · FAST · IBA · KU" />
+              <StatPill icon={<GraduationCap size={16} strokeWidth={2.5}/>} label="For Students All Across Pakistan" />
               <StatPill icon={<ShieldCheck size={16} strokeWidth={2.5}/>} label="IP-protected" />
               <StatPill icon={<MapPin size={16} strokeWidth={2.5}/>} label="Built for Pakistan" />
             </div>
