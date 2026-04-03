@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "./supabase";
 
 import { 
   GraduationCap, 
   Building, 
-  ShieldCheck, 
+  ShieldCheck,
   MapPin, 
   FileText, 
   CheckCircle, 
@@ -245,13 +246,13 @@ export default function WaitlistPage() {
   const [focusField, setFocus] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [waitlistCount, setWaitlistCount] = useState(248);
+  const [waitlistCount, setWaitlistCount] = useState(0);
 
   useEffect(() => {
-    const t = setInterval(() => {
-      if (Math.random() > 0.6) setWaitlistCount(c => c + Math.floor(Math.random() * 3) + 1);
-    }, 6500);
-    return () => clearInterval(t);
+  supabase
+    .from("waitlist")
+    .select("*", { count: "exact", head: true })
+    .then(({ count }) => { if (count) setWaitlistCount(count); });
   }, []);
 
   const validate = () => {
@@ -264,12 +265,45 @@ export default function WaitlistPage() {
     return e;
   };
 
-  const handleSubmit = () => {
-    const e = validate();
-    if (Object.keys(e).length) { setErrors(e); return; }
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setSubmitted(true); setWaitlistCount(c => c+1); }, 1500);
-  };
+  const handleSubmit = async () => {
+  const e = validate();
+  if (Object.keys(e).length) { setErrors(e); return; }
+  setLoading(true);
+
+  // Save to Supabase
+  const { error } = await supabase.from("waitlist").insert({
+    name: form.name,
+    email: form.email,
+    company_name: form.company || null,
+    role,
+    reason: form.reason,
+  });
+
+  if (error) {
+    setLoading(false);
+    if (error.code === "23505") {
+      setErrors({ email: "This email is already on the waitlist" });
+    } else {
+      setErrors({ email: "Something went wrong, please try again" });
+    }
+    return;
+  }
+
+  // Fetch real count
+  const { count } = await supabase
+    .from("waitlist")
+    .select("*", { count: "exact", head: true });
+  
+  setWaitlistCount(count);
+
+  // Send welcome email
+  await supabase.functions.invoke("send-welcome-email", {
+    body: { name: form.name, email: form.email, role },
+  });
+
+  setLoading(false);
+  setSubmitted(true);
+};
 
   const inputStyle = (f) => ({
     ...inputBase,
@@ -473,7 +507,7 @@ export default function WaitlistPage() {
                 <Field label="Email Address" hint={errors.email}>
                   <input
                     type="email"
-                    placeholder={role==="student" ? "preferably your .edu.pk email" : "your work email"}
+                    placeholder={role==="student" ? "Enter your email" : "Enter your work email"}
                     value={form.email}
                     onChange={e => { setForm(f=>({...f,email:e.target.value})); setErrors(er=>({...er,email:undefined})); }}
                     onFocus={() => setFocus("email")}
